@@ -22,9 +22,21 @@ DQ_list = ['DATA', 'CBC_CAT1', 'CBC_CAT2', 'CBC_CAT3',
            'NO_CW_HW_INJ', 'NO_STOCH_HW_INJ', 'DEFAULT']
 
 index_start = 1
+list_warning = []
+for i, file in enumerate(tqdm(file_list)):
+    # if file not in ['GPS1126989824_index_SNR0.02-fs4096-T5w1-27-frac5.output.npy',
+                    # 'GPS1126993920_index_SNR0.02-fs4096-T5w1-27-frac5.output.npy',
+                    # 'GPS1126985728_index_SNR0.02-fs4096-T5w1-27-frac5.output.npy']: # 172 
+        # continue
+    try:
+        npy = np.load(os.path.join(address, file))
+    except Exception as e:
+        print(e)
+        list_warning.append([i,file])
+        np.save('list_warning', list_warning)
+        print(i, file)
+        continue
 
-for file in tqdm(file_list):
-    npy = np.load(os.path.join(address, file))
     
     df = pd.DataFrame({'Prediction': npy[0],
                        'GPS': npy[1], 
@@ -42,6 +54,7 @@ for file in tqdm(file_list):
     df.to_sql('data', disk_engine, if_exists='append')
     index_start = df.ID.iloc[-1] + 1
 
+print(list_warning)
 
 # 根据 GPS 对数据库中的 ID 去重
 # http://docs.sqlalchemy.org/en/latest/core/connections.html#basic-usage
